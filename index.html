@@ -126,7 +126,10 @@
         Estimated time: <strong>10 &sim; 15 minutes</strong>. Please use headphones. You can pause and resume anytime.
       </p>
 
-      <label for="rater-id"><strong>Your Name / Rater ID:</strong></label>
+      <label for="eval-passcode"><strong>Access Passcode:</strong></label>
+      <input type="password" id="eval-passcode" placeholder="Enter the passcode provided by the researcher" onkeydown="if(event.key==='Enter')startEvaluation()">
+
+      <label for="rater-id" style="margin-top:8px; display:block;"><strong>Your Name / Rater ID:</strong></label>
       <input type="text" id="rater-id" placeholder="e.g., rater_01 or your name" onkeydown="if(event.key==='Enter')startEvaluation()">
       <button class="btn btn-primary" style="width:100%" onclick="startEvaluation()">Start Evaluation</button>
 
@@ -208,10 +211,9 @@
       <div class="completion-msg card">
         <h2>All Tests Complete!</h2>
         <p style="margin-bottom:16px;">Thank you for participating in this evaluation.</p>
-        <div class="success-box" style="text-align:left">
+        <div class="success-box" style="text-align:left" id="done-status">
           <strong>Your responses have been submitted.</strong><br>
-          A result file has been automatically downloaded to your browser's Downloads folder.<br>
-          <strong>Please send the downloaded .csv file to the researcher (Chenxi).</strong>
+          A backup .csv file has been downloaded to your browser's Downloads folder.
         </div>
         <div id="rater-own-summary" style="text-align:left; margin-top:16px;"></div>
         <button class="btn btn-primary" style="margin-top:16px" onclick="backToLogin()">Close</button>
@@ -239,9 +241,18 @@
 
 <script>
 // ============================================================
-// ADMIN PASSWORD  (change this as needed)
+// ACCESS CONTROL (change these as needed)
 // ============================================================
-const ADMIN_PASSWORD = 'fac2026';
+const ADMIN_PASSWORD = 'fac2026';          // Admin dashboard password (only you)
+const EVAL_PASSCODE  = 'iwaenc2026';       // Rater gate passcode - share only with invited raters
+
+// ============================================================
+// SERVER-SIDE RESULT COLLECTION (Google Apps Script Web App)
+//   Leave as '' to disable server upload (CSV download still works).
+//   To enable: deploy an Apps Script as a Web App (see SETUP_APPS_SCRIPT.md)
+//   and paste the /exec URL below.
+// ============================================================
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxlSPPSfvEASk_qTe360yOHPus-AALduzIR80WBSO-wRPPrsf7DwhDGQgOMXXFmw_2j/exec';
 
 // ============================================================
 // AUDIO PATH BUILDERS
@@ -414,6 +425,13 @@ function generateItems(rng) {
 // START
 // ============================================================
 function startEvaluation() {
+  const passcode = document.getElementById('eval-passcode').value.trim();
+  if (!passcode) { alert('Please enter the access passcode.'); return; }
+  if (passcode !== EVAL_PASSCODE) {
+    alert('Incorrect passcode. Please contact the researcher if you believe this is an error.');
+    return;
+  }
+
   raterId = document.getElementById('rater-id').value.trim();
   if (!raterId) { alert('Please enter your name or rater ID.'); return; }
 
@@ -537,11 +555,48 @@ function tryFinishMOS() {
 function finalizeSubmission() {
   submissionDone = true;
   saveProgress();
+  // Try server-side upload first; always also download CSV as a local backup
+  postResultsToServer()
+    .then(ok => { updateDoneMessage(ok); })
+    .catch(() => { updateDoneMessage(false); });
   autoDownloadSubmission();
   renderOwnSummary();
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.getElementById('tab-done').classList.add('active');
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+}
+
+function updateDoneMessage(serverOk) {
+  const el = document.getElementById('done-status');
+  if (!el) return;
+  if (serverOk) {
+    el.innerHTML = '<strong>Your responses have been submitted to the researcher.</strong><br>' +
+      'A backup .csv copy has also been saved to your Downloads folder. You do not need to send it unless the researcher asks.';
+  } else {
+    el.innerHTML = '<strong>Your responses have been saved locally.</strong><br>' +
+      'A result file has been downloaded to your browser\'s Downloads folder.<br>' +
+      '<strong>Please send the downloaded .csv file to the researcher (Chenxi).</strong>';
+  }
+}
+
+function postResultsToServer() {
+  if (!GOOGLE_APPS_SCRIPT_URL) return Promise.resolve(false);
+  const payload = {
+    rater_id: raterId,
+    timestamp: new Date().toISOString(),
+    format_version: 1,
+    user_agent: (navigator && navigator.userAgent) || '',
+    ab:  abItems.map((it, i)  => ({ idx: i + 1, id: it.id, answer: abAnswers[it.id]  || '' })),
+    xab: xabItems.map((it, i) => ({ idx: i + 1, id: it.id, answer: xabAnswers[it.id] || '' })),
+    mos: mosItems.map((it, i) => ({ idx: i + 1, id: it.id, score: mosAnswers[it.id] || '' })),
+  };
+  // Use text/plain to avoid CORS preflight; Apps Script reads e.postData.contents
+  return fetch(GOOGLE_APPS_SCRIPT_URL, {
+    method: 'POST',
+    mode: 'cors',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload),
+  }).then(r => r && r.ok).catch(() => false);
 }
 
 // ============================================================
