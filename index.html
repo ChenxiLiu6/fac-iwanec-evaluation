@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FAC Subjective Evaluation</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; line-height: 1.5; }
+  .container { max-width: 820px; margin: 0 auto; padding: 20px; }
+  h1 { font-size: 1.5em; margin-bottom: 10px; }
+  h2 { font-size: 1.2em; margin-bottom: 8px; color: #444; }
+
+  /* Tabs - prominent navigation bar */
+  .tabs { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; }
+  .tab-btn { flex: 1; padding: 12px 8px; border: none; border-bottom: 3px solid transparent; background: transparent;
+    cursor: pointer; font-size: 0.9em; font-weight: 500; color: #999; transition: all 0.2s; margin-bottom: -2px; }
+  .tab-btn:hover { color: #666; background: #f9fafb; }
+  .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 600; }
+  .tab-btn.completed { color: #16a34a; }
+  .tab-btn .check { color: #16a34a; margin-left: 4px; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Cards */
+  .card { background: #fff; border-radius: 8px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 4px; }
+
+  /* Audio */
+  .audio-row { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
+  .audio-label { font-weight: 600; min-width: 80px; font-size: 0.95em; }
+  audio { height: 36px; flex: 1; max-width: 100%; }
+  .audio-error { font-size: 0.8em; color: #c00; flex: 1; }
+
+  /* Buttons */
+  .btn { padding: 8px 20px; border: 2px solid #ddd; border-radius: 6px; background: #fff; cursor: pointer; font-size: 0.9em; transition: all 0.15s; }
+  .btn:hover { border-color: #999; background: #f9f9f9; }
+  .btn.selected { border-color: #2563eb; background: #eff6ff; color: #2563eb; font-weight: 600; }
+  .btn-primary { background: #2563eb; color: #fff; border-color: #2563eb; }
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-primary:disabled { background: #93c5fd; border-color: #93c5fd; cursor: not-allowed; }
+  .btn-success { background: #16a34a; color: #fff; border-color: #16a34a; }
+  .btn-success:hover { background: #15803d; }
+  .btn-group { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+
+  /* MOS scale */
+  .mos-scale { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .mos-btn { width: 70px; height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px solid #ddd; border-radius: 6px; background: #fff; cursor: pointer; font-size: 0.75em; transition: all 0.15s; }
+  .mos-btn:hover { border-color: #999; }
+  .mos-btn.selected { border-color: #2563eb; background: #eff6ff; color: #2563eb; }
+  .mos-btn .score { font-size: 1.3em; font-weight: 700; }
+
+  /* Progress */
+  .progress-bar { height: 6px; background: #e5e7eb; border-radius: 3px; margin: 12px 0; overflow: hidden; }
+  .progress-fill { height: 100%; background: #2563eb; border-radius: 3px; transition: width 0.3s; }
+  .progress-text { font-size: 0.85em; color: #666; text-align: right; }
+
+  /* Login */
+  .login-box { max-width: 500px; margin: 40px auto; }
+  .login-box input { width: 100%; padding: 10px 14px; border: 2px solid #ddd; border-radius: 6px; font-size: 1em; margin: 8px 0 16px; }
+  .login-box input:focus { outline: none; border-color: #2563eb; }
+  .test-list { margin: 12px 0 20px; padding-left: 0; list-style: none; }
+  .test-list li { padding: 10px 14px; margin: 6px 0; background: #f9fafb; border-radius: 6px; font-size: 0.9em; }
+  .test-list li strong { display: block; margin-bottom: 2px; }
+  .test-list li span { color: #666; font-size: 0.9em; }
+
+  /* Info box */
+  .info { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 6px; padding: 12px 16px; margin-bottom: 16px; font-size: 0.9em; color: #0369a1; }
+  .warning-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 12px 16px; margin: 12px 0; font-size: 0.88em; color: #991b1b; }
+  .warning-box ul { margin: 6px 0 0 18px; }
+  .success-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 12px 16px; margin: 12px 0; font-size: 0.9em; color: #166534; }
+
+  /* Nav */
+  .nav-row { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
+
+  /* Results */
+  table { width: 100%; border-collapse: collapse; font-size: 0.85em; margin: 8px 0; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #eee; }
+  th { background: #f9fafb; font-weight: 600; }
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 12px 0; }
+  .stat-card { background: #f9fafb; border-radius: 6px; padding: 12px; text-align: center; }
+  .stat-card .value { font-size: 1.4em; font-weight: 700; color: #2563eb; }
+  .stat-card .label { font-size: 0.8em; color: #666; }
+
+  .upload-area { border: 2px dashed #ddd; border-radius: 8px; padding: 24px; text-align: center; margin: 12px 0; cursor: pointer; }
+  .upload-area:hover { border-color: #999; background: #fafafa; }
+  .upload-area input { display: none; }
+
+  .completion-msg { text-align: center; padding: 40px 20px; }
+  .completion-msg h2 { color: #16a34a; margin-bottom: 12px; }
+  .hidden { display: none !important; }
+  .pair-label { display: inline-block; background: #e5e7eb; border-radius: 4px; padding: 2px 8px; font-size: 0.8em; color: #555; }
+  .admin-link { font-size: 0.8em; color: #aaa; text-decoration: underline; cursor: pointer; }
+  .admin-link:hover { color: #666; }
+
+  /* Summary table of rater's own choices (end-of-test view) */
+  .summary-tbl { font-size: 0.82em; }
+  .summary-tbl td { padding: 6px 8px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- ===================== LOGIN PAGE ===================== -->
+  <div id="login-page">
+    <div class="login-box card">
+      <h1>FAC Speech Evaluation</h1>
+      <p style="margin:8px 0 16px; color:#666;">Foreign Accent Conversion &mdash; Subjective Listening Test</p>
+
+      <p style="font-size:0.92em; margin-bottom:6px;">This evaluation consists of <strong>3 short listening tests</strong>:</p>
+      <ul class="test-list">
+        <li>
+          <strong>Test 1: AB Accentedness Preference (30 items)</strong>
+          <span>Listen to two clips of the same sentence. Choose which sounds more native-like.</span>
+        </li>
+        <li>
+          <strong>Test 2: XAB Speaker Similarity (12 items)</strong>
+          <span>Listen to a reference speaker (X), then two clips (A, B). Choose which sounds more like X.</span>
+        </li>
+        <li>
+          <strong>Test 3: 5-Point Naturalness MOS (36 items)</strong>
+          <span>Listen to a clip and rate how natural it sounds on a 1-5 scale.</span>
+        </li>
+      </ul>
+      <p style="font-size:0.9em; color:#555; margin-bottom:20px;">
+        Estimated time: <strong>10 &sim; 15 minutes</strong>. Please use headphones. You can pause and resume anytime.
+      </p>
+
+      <label for="rater-id"><strong>Your Name / Rater ID:</strong></label>
+      <input type="text" id="rater-id" placeholder="e.g., rater_01 or your name" onkeydown="if(event.key==='Enter')startEvaluation()">
+      <button class="btn btn-primary" style="width:100%" onclick="startEvaluation()">Start Evaluation</button>
+
+      <div style="text-align:center; margin-top:24px;">
+        <span class="admin-link" onclick="promptAdmin()">Admin Access</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== EVAL PAGE ===================== -->
+  <div id="eval-page" class="hidden">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <h1>FAC Evaluation</h1>
+      <span id="rater-display" style="font-size:0.85em; color:#666;"></span>
+    </div>
+
+    <div class="tabs" id="tab-bar">
+      <button class="tab-btn active" data-tab="ab" onclick="switchTab('ab')">
+        <span>1. AB Preference</span><span class="check hidden" id="check-ab">&#10003;</span>
+      </button>
+      <button class="tab-btn" data-tab="xab" onclick="switchTab('xab')">
+        <span>2. XAB Similarity</span><span class="check hidden" id="check-xab">&#10003;</span>
+      </button>
+      <button class="tab-btn" data-tab="mos" onclick="switchTab('mos')">
+        <span>3. MOS Naturalness</span><span class="check hidden" id="check-mos">&#10003;</span>
+      </button>
+    </div>
+
+    <!-- AB TEST -->
+    <div id="tab-ab" class="tab-content active">
+      <div class="info">
+        <strong>AB Accentedness Preference Test</strong><br>
+        Listen to clips A and B of the same sentence. Choose which sounds <strong>more native-like</strong> (less accented). If neither is clearly better, select "No preference."
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="ab-progress"></div></div>
+      <div class="progress-text" id="ab-progress-text"></div>
+      <div id="ab-warning"></div>
+      <div id="ab-content"></div>
+      <div class="nav-row">
+        <button class="btn" id="ab-prev" onclick="navAB(-1)">Previous</button>
+        <button class="btn btn-primary" id="ab-next" onclick="navAB(1)">Next</button>
+      </div>
+    </div>
+
+    <!-- XAB TEST -->
+    <div id="tab-xab" class="tab-content">
+      <div class="info">
+        <strong>XAB Speaker Similarity Test</strong><br>
+        First listen to reference clip <strong>X</strong> (the original speaker). Then listen to A and B (two converted versions). Choose which sounds <strong>more like the person in X</strong>.
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="xab-progress"></div></div>
+      <div class="progress-text" id="xab-progress-text"></div>
+      <div id="xab-warning"></div>
+      <div id="xab-content"></div>
+      <div class="nav-row">
+        <button class="btn" id="xab-prev" onclick="navXAB(-1)">Previous</button>
+        <button class="btn btn-primary" id="xab-next" onclick="navXAB(1)">Next</button>
+      </div>
+    </div>
+
+    <!-- MOS TEST -->
+    <div id="tab-mos" class="tab-content">
+      <div class="info">
+        <strong>Naturalness MOS (Mean Opinion Score)</strong><br>
+        Listen to each clip and rate how <strong>natural</strong> it sounds on a 1-5 scale.
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="mos-progress"></div></div>
+      <div class="progress-text" id="mos-progress-text"></div>
+      <div id="mos-warning"></div>
+      <div id="mos-content"></div>
+      <div class="nav-row">
+        <button class="btn" id="mos-prev" onclick="navMOS(-1)">Previous</button>
+        <button class="btn btn-primary" id="mos-next" onclick="navMOS(1)">Next</button>
+      </div>
+    </div>
+
+    <!-- DONE PAGE (shown after all 3 tests) -->
+    <div id="tab-done" class="tab-content">
+      <div class="completion-msg card">
+        <h2>All Tests Complete!</h2>
+        <p style="margin-bottom:16px;">Thank you for participating in this evaluation.</p>
+        <div class="success-box" style="text-align:left">
+          <strong>Your responses have been submitted.</strong><br>
+          A result file has been automatically downloaded to your browser's Downloads folder.<br>
+          <strong>Please send the downloaded .csv file to the researcher (Chenxi).</strong>
+        </div>
+        <div id="rater-own-summary" style="text-align:left; margin-top:16px;"></div>
+        <button class="btn btn-primary" style="margin-top:16px" onclick="backToLogin()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== RESULTS PAGE (Admin) ===================== -->
+  <div id="results-page" class="hidden">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <h1>Results Dashboard (Admin)</h1>
+      <button class="btn" onclick="backToLogin()">Back</button>
+    </div>
+    <div class="card">
+      <h2>Import Rater Submission Files</h2>
+      <div class="upload-area" id="upload-area">
+        <input type="file" id="file-input" multiple accept=".csv,.json,.fac" onchange="importResults(event)">
+        <p>Click to upload one or more rater submission files (.csv, or legacy .fac/.json)</p>
+      </div>
+      <div id="imported-raters" style="font-size:0.85em; color:#666; margin-top:8px;"></div>
+    </div>
+    <div id="results-content"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// ADMIN PASSWORD  (change this as needed)
+// ============================================================
+const ADMIN_PASSWORD = 'fac2026';
+
+// ============================================================
+// AUDIO PATH BUILDERS
+// Folder layout (relative to this HTML file):
+//   data/baselines/{test_set}/{speaker}/{utt}.wav
+//   data/L2Arctic/{speaker}/{utt}.wav
+//   data/native-references/{speaker}/{utt}.wav
+//   data/outputs/P1_QP/{test_set}/{speaker}/{utt}.wav
+// ============================================================
+const P = {
+  l2:          (spk, utt) => `data/L2Arctic/${spk}/${utt}.wav`,
+  l1:          (spk, utt) => `data/native-references/${spk}/${utt}.wav`,
+  qp_tokan:    (spk, utt) => `data/outputs/P1_QP/tokan/${spk}/${utt}.wav`,
+  qp_ttsguided:(spk, utt) => `data/outputs/P1_QP/ttsguided/${spk}/${utt}.wav`,
+  qp_zsnoref:  (spk, utt) => `data/outputs/P1_QP/zsnoref/${spk}/${utt}.wav`,
+  tokan:       (spk, utt) => `data/baselines/tokan/${spk}/${utt}.wav`,
+  ttsguided:   (spk, utt) => `data/baselines/ttsguided/${spk}/${utt}.wav`,
+  zsnoref:     (spk, utt) => `data/baselines/zsnoref/${spk}/${utt}.wav`,
+};
+
+// ============================================================
+// AB ITEMS (30 total) - hardcoded
+// ============================================================
+const AB_RAW = [];
+
+// QP vs TokAN: 12 items (6 accent groups x 1M + 1F)
+[
+  {spk:'ABA',utt:'arctic_a0001'},{spk:'SKA',utt:'arctic_a0003'},
+  {spk:'BWC',utt:'arctic_a0005'},{spk:'SVBI',utt:'arctic_a0007'},
+  {spk:'HJK',utt:'arctic_a0009'},{spk:'YDCK',utt:'arctic_a0011'},
+  {spk:'LXC',utt:'arctic_a0002'},{spk:'TXHC',utt:'arctic_a0004'},
+  {spk:'EBVS',utt:'arctic_a0006'},{spk:'ERMS',utt:'arctic_a0008'},
+  {spk:'HQTV',utt:'arctic_a0010'},{spk:'TNI',utt:'arctic_a0012'},
+].forEach(({spk,utt}) => AB_RAW.push({
+  id:`ab_tokan_${spk}_${utt}`, spk, utt, pairType:'QP vs TokAN', testSet:'tokan',
+  pathSys1:P.qp_tokan(spk,utt), pathSys2:P.tokan(spk,utt), sys1Key:'qp', sys2Key:'tokan',
+}));
+
+// QP vs TTS-Guided: 12 items (4 speakers x 3 sentences)
+[
+  {spk:'ASI',utt:'arctic_a0006'},{spk:'ASI',utt:'arctic_a0033'},{spk:'ASI',utt:'arctic_b0537'},
+  {spk:'LXC',utt:'arctic_a0040'},{spk:'LXC',utt:'arctic_a0067'},{spk:'LXC',utt:'arctic_a0327'},
+  {spk:'TNI',utt:'arctic_a0069'},{spk:'TNI',utt:'arctic_a0200'},{spk:'TNI',utt:'arctic_b0534'},
+  {spk:'TXHC',utt:'arctic_b0154'},{spk:'TXHC',utt:'arctic_b0340'},{spk:'TXHC',utt:'arctic_b0533'},
+].forEach(({spk,utt}) => AB_RAW.push({
+  id:`ab_ttsg_${spk}_${utt}`, spk, utt, pairType:'QP vs TTS-Guided', testSet:'ttsguided',
+  pathSys1:P.qp_ttsguided(spk,utt), pathSys2:P.ttsguided(spk,utt), sys1Key:'qp', sys2Key:'ttsguided',
+}));
+
+// QP vs ZS-NoRef: 6 items (2 speakers x 3 sentences)
+[
+  {spk:'TXHC',utt:'arctic_b0490'},{spk:'TXHC',utt:'arctic_b0492'},{spk:'TXHC',utt:'arctic_b0539'},
+  {spk:'YKWK',utt:'arctic_b0509'},{spk:'YKWK',utt:'arctic_b0515'},{spk:'YKWK',utt:'arctic_b0523'},
+].forEach(({spk,utt}) => AB_RAW.push({
+  id:`ab_zsnr_${spk}_${utt}`, spk, utt, pairType:'QP vs ZS-NoRef', testSet:'zsnoref',
+  pathSys1:P.qp_zsnoref(spk,utt), pathSys2:P.zsnoref(spk,utt), sys1Key:'qp', sys2Key:'zsnoref',
+}));
+
+// ============================================================
+// XAB ITEMS (12 total) - X=L2 original, A/B = QP vs baseline
+// ============================================================
+const XAB_RAW = [];
+
+// QP vs TokAN: 6 items
+[
+  {spk:'ABA',utt:'arctic_a0013'},{spk:'BWC',utt:'arctic_a0014'},
+  {spk:'HJK',utt:'arctic_a0015'},{spk:'LXC',utt:'arctic_a0016'},
+  {spk:'EBVS',utt:'arctic_a0017'},{spk:'HQTV',utt:'arctic_a0018'},
+].forEach(({spk,utt}) => XAB_RAW.push({
+  id:`xab_tokan_${spk}_${utt}`, spk, utt, pairType:'QP vs TokAN', testSet:'tokan',
+  refPath:P.l2(spk,utt), pathQP:P.qp_tokan(spk,utt), pathBaseline:P.tokan(spk,utt), baselineKey:'tokan',
+}));
+
+// QP vs TTS-Guided: 4 items
+[
+  {spk:'ASI',utt:'arctic_a0006'},{spk:'LXC',utt:'arctic_a0040'},
+  {spk:'TNI',utt:'arctic_a0069'},{spk:'TXHC',utt:'arctic_b0154'},
+].forEach(({spk,utt}) => XAB_RAW.push({
+  id:`xab_ttsg_${spk}_${utt}`, spk, utt, pairType:'QP vs TTS-Guided', testSet:'ttsguided',
+  refPath:P.l2(spk,utt), pathQP:P.qp_ttsguided(spk,utt), pathBaseline:P.ttsguided(spk,utt), baselineKey:'ttsguided',
+}));
+
+// QP vs ZS-NoRef: 2 items
+[
+  {spk:'TXHC',utt:'arctic_b0490'},{spk:'YKWK',utt:'arctic_b0509'},
+].forEach(({spk,utt}) => XAB_RAW.push({
+  id:`xab_zsnr_${spk}_${utt}`, spk, utt, pairType:'QP vs ZS-NoRef', testSet:'zsnoref',
+  refPath:P.l2(spk,utt), pathQP:P.qp_zsnoref(spk,utt), pathBaseline:P.zsnoref(spk,utt), baselineKey:'zsnoref',
+}));
+
+// ============================================================
+// MOS ITEMS (36 total) - L1, L2, QP, Baseline per sentence
+// ============================================================
+const MOS_RAW = [];
+function addMOS(testSet, spk, utt, qpFn, blFn, blName, l1spk) {
+  MOS_RAW.push({ id:`mos_l1_${testSet}_${spk}_${utt}`, spk, utt, testSet,
+    condition:'l1', condLabel:'L1 Native (GT)', audioPath:P.l1(l1spk,utt) });
+  MOS_RAW.push({ id:`mos_l2_${testSet}_${spk}_${utt}`, spk, utt, testSet,
+    condition:'l2', condLabel:'L2 Original', audioPath:P.l2(spk,utt) });
+  MOS_RAW.push({ id:`mos_qp_${testSet}_${spk}_${utt}`, spk, utt, testSet,
+    condition:'qp', condLabel:'P1 (QP)', audioPath:qpFn(spk,utt) });
+  const label = {tokan:'TokAN',ttsguided:'TTS-Guided',zsnoref:'ZS-NoRef'}[blName];
+  MOS_RAW.push({ id:`mos_${blName}_${testSet}_${spk}_${utt}`, spk, utt, testSet,
+    condition:blName, condLabel:label, audioPath:blFn(spk,utt) });
+}
+
+// TokAN set: 4 sentences x 4 conditions = 16
+[{spk:'SKA',utt:'arctic_a0019',l1:'BDL'},{spk:'SVBI',utt:'arctic_a0020',l1:'CLB'},
+ {spk:'YDCK',utt:'arctic_a0017',l1:'RMS'},{spk:'TXHC',utt:'arctic_a0018',l1:'SLT'}]
+.forEach(({spk,utt,l1}) => addMOS('tokan',spk,utt,P.qp_tokan,P.tokan,'tokan',l1));
+
+// TTS-Guided set: 3 sentences x 4 conditions = 12
+[{spk:'ASI',utt:'arctic_a0033',l1:'BDL'},{spk:'LXC',utt:'arctic_a0067',l1:'CLB'},
+ {spk:'TNI',utt:'arctic_a0200',l1:'RMS'}]
+.forEach(({spk,utt,l1}) => addMOS('ttsguided',spk,utt,P.qp_ttsguided,P.ttsguided,'ttsguided',l1));
+
+// ZS-NoRef set: 2 sentences x 4 conditions = 8
+[{spk:'TXHC',utt:'arctic_b0492',l1:'SLT'},{spk:'YKWK',utt:'arctic_b0515',l1:'BDL'}]
+.forEach(({spk,utt,l1}) => addMOS('zsnoref',spk,utt,P.qp_zsnoref,P.zsnoref,'zsnoref',l1));
+
+// ============================================================
+// SEEDED PRNG
+// ============================================================
+function hashStr(s) {
+  let h = 0; for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0; return Math.abs(h);
+}
+function mulberry32(seed) {
+  return function() { seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+function shuffle(arr, rng) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+
+// ============================================================
+// STATE
+// ============================================================
+let raterId = '';
+let rng = null;
+let abItems = [], xabItems = [], mosItems = [];
+let abIdx = 0, xabIdx = 0, mosIdx = 0;
+let abAnswers = {}, xabAnswers = {}, mosAnswers = {};
+let allResults = {};
+let submissionDone = false;
+
+// ============================================================
+// GENERATE RANDOMIZED ITEMS
+// ============================================================
+function generateItems(rng) {
+  abItems = shuffle(AB_RAW, rng).map(item => {
+    const swap = rng() > 0.5;
+    return { ...item, swap,
+      pathA: swap ? item.pathSys2 : item.pathSys1, pathB: swap ? item.pathSys1 : item.pathSys2,
+      labelA: swap ? item.sys2Key : item.sys1Key, labelB: swap ? item.sys1Key : item.sys2Key };
+  });
+  xabItems = shuffle(XAB_RAW, rng).map(item => {
+    const swap = rng() > 0.5;
+    return { ...item, swap,
+      pathA: swap ? item.pathBaseline : item.pathQP, pathB: swap ? item.pathQP : item.pathBaseline,
+      labelA: swap ? item.baselineKey : 'qp', labelB: swap ? 'qp' : item.baselineKey };
+  });
+  mosItems = shuffle(MOS_RAW, rng);
+}
+
+// ============================================================
+// START
+// ============================================================
+function startEvaluation() {
+  raterId = document.getElementById('rater-id').value.trim();
+  if (!raterId) { alert('Please enter your name or rater ID.'); return; }
+
+  if (raterId.toLowerCase() === 'admin') {
+    alert('Please use a different rater ID.'); return;
+  }
+
+  const saved = localStorage.getItem('fac_eval_v2_' + raterId);
+  if (saved) {
+    try {
+      const d = JSON.parse(saved);
+      abAnswers = d.abAnswers || {}; xabAnswers = d.xabAnswers || {}; mosAnswers = d.mosAnswers || {};
+    } catch(e) { abAnswers = {}; xabAnswers = {}; mosAnswers = {}; }
+  } else { abAnswers = {}; xabAnswers = {}; mosAnswers = {}; }
+
+  rng = mulberry32(hashStr(raterId));
+  generateItems(rng);
+  abIdx = findFirst(abItems, abAnswers);
+  xabIdx = findFirst(xabItems, xabAnswers);
+  mosIdx = findFirst(mosItems, mosAnswers);
+  submissionDone = false;
+
+  document.getElementById('login-page').classList.add('hidden');
+  document.getElementById('eval-page').classList.remove('hidden');
+  document.getElementById('rater-display').textContent = 'Rater: ' + raterId;
+
+  updateTabChecks();
+  switchTab('ab');
+}
+
+function findFirst(items, ans) {
+  for (let i = 0; i < items.length; i++) { if (!ans[items[i].id]) return i; }
+  return items.length - 1;
+}
+
+// ============================================================
+// TAB NAVIGATION
+// ============================================================
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  const btn = document.querySelector(`[data-tab="${tab}"]`);
+  if (btn) btn.classList.add('active');
+  const pane = document.getElementById('tab-' + tab);
+  if (pane) pane.classList.add('active');
+  if (tab === 'ab') renderAB();
+  else if (tab === 'xab') renderXAB();
+  else if (tab === 'mos') renderMOS();
+}
+
+function updateTabChecks() {
+  const abDone = abItems.length > 0 && abItems.every(it => abAnswers[it.id]);
+  const xabDone = xabItems.length > 0 && xabItems.every(it => xabAnswers[it.id]);
+  const mosDone = mosItems.length > 0 && mosItems.every(it => mosAnswers[it.id]);
+  document.getElementById('check-ab').classList.toggle('hidden', !abDone);
+  document.getElementById('check-xab').classList.toggle('hidden', !xabDone);
+  document.getElementById('check-mos').classList.toggle('hidden', !mosDone);
+  document.querySelector('[data-tab="ab"]').classList.toggle('completed', abDone);
+  document.querySelector('[data-tab="xab"]').classList.toggle('completed', xabDone);
+  document.querySelector('[data-tab="mos"]').classList.toggle('completed', mosDone);
+}
+
+// ============================================================
+// COMPLETION CHECK
+// ============================================================
+function getMissing(items, answers) {
+  const missing = [];
+  items.forEach((it, i) => { if (!answers[it.id]) missing.push(i + 1); });
+  return missing;
+}
+
+function showMissingWarning(containerId, missing, testLabel) {
+  const el = document.getElementById(containerId);
+  if (missing.length === 0) { el.innerHTML = ''; return false; }
+  const itemNums = missing.length <= 20 ? missing.join(', ') : missing.slice(0, 20).join(', ') + ` ... and ${missing.length - 20} more`;
+  el.innerHTML = `<div class="warning-box">
+    <strong>Missing answers in ${testLabel}:</strong> Item(s) ${itemNums}
+    <br>Please go back and answer all missing items before proceeding.
+  </div>`;
+  return true;
+}
+
+function tryFinishAB() {
+  const missing = getMissing(abItems, abAnswers);
+  if (showMissingWarning('ab-warning', missing, 'AB Preference Test')) {
+    abIdx = missing[0] - 1; renderAB(); return;
+  }
+  updateTabChecks();
+  switchTab('xab');
+}
+
+function tryFinishXAB() {
+  const missing = getMissing(xabItems, xabAnswers);
+  if (showMissingWarning('xab-warning', missing, 'XAB Similarity Test')) {
+    xabIdx = missing[0] - 1; renderXAB(); return;
+  }
+  updateTabChecks();
+  switchTab('mos');
+}
+
+function tryFinishMOS() {
+  const missingMOS = getMissing(mosItems, mosAnswers);
+  if (showMissingWarning('mos-warning', missingMOS, 'MOS Naturalness Test')) {
+    mosIdx = missingMOS[0] - 1; renderMOS(); return;
+  }
+  updateTabChecks();
+  const abMiss = getMissing(abItems, abAnswers);
+  const xabMiss = getMissing(xabItems, xabAnswers);
+  if (abMiss.length > 0 || xabMiss.length > 0) {
+    let msg = 'You cannot submit yet. Missing answers:\n';
+    if (abMiss.length > 0) msg += `\n- Test 1 (AB Preference): Item(s) ${abMiss.join(', ')}`;
+    if (xabMiss.length > 0) msg += `\n- Test 2 (XAB Similarity): Item(s) ${xabMiss.join(', ')}`;
+    alert(msg + '\n\nPlease go back and complete all items before submitting.');
+    if (abMiss.length > 0) { abIdx = abMiss[0] - 1; switchTab('ab'); }
+    else if (xabMiss.length > 0) { xabIdx = xabMiss[0] - 1; switchTab('xab'); }
+    return;
+  }
+  finalizeSubmission();
+}
+
+function finalizeSubmission() {
+  submissionDone = true;
+  saveProgress();
+  autoDownloadSubmission();
+  renderOwnSummary();
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-done').classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+}
+
+// ============================================================
+// AB TEST
+// ============================================================
+function renderAB() {
+  const total = abItems.length;
+  const answered = abItems.filter(it => abAnswers[it.id]).length;
+  document.getElementById('ab-progress').style.width = (answered / total * 100) + '%';
+  document.getElementById('ab-progress-text').textContent = `${answered} / ${total} answered`;
+  document.getElementById('ab-warning').innerHTML = '';
+
+  const item = abItems[abIdx];
+  const ans = abAnswers[item.id] || '';
+
+  // Note: do NOT display system names (QP vs TokAN etc.) - avoid bias.
+  document.getElementById('ab-content').innerHTML = `
+    <div class="card">
+      <div class="card-header">
+        <span><strong>Item ${abIdx + 1} / ${total}</strong></span>
+      </div>
+      <p style="font-size:0.9em; color:#666; margin-bottom:10px;">
+        Which sample sounds more <strong>native-like</strong> (less accented)?
+      </p>
+      <div class="audio-row">
+        <span class="audio-label">Sample A:</span>
+        <audio controls preload="auto" src="${item.pathA}" onerror="audioErr(this)"></audio>
+      </div>
+      <div class="audio-row">
+        <span class="audio-label">Sample B:</span>
+        <audio controls preload="auto" src="${item.pathB}" onerror="audioErr(this)"></audio>
+      </div>
+      <div class="btn-group">
+        <button class="btn ${ans==='A'?'selected':''}" onclick="answerAB('A')">A is more native-like</button>
+        <button class="btn ${ans==='B'?'selected':''}" onclick="answerAB('B')">B is more native-like</button>
+        <button class="btn ${ans==='none'?'selected':''}" onclick="answerAB('none')">No preference</button>
+      </div>
+    </div>`;
+
+  document.getElementById('ab-prev').disabled = abIdx === 0;
+  const isLast = abIdx === total - 1;
+  const nextBtn = document.getElementById('ab-next');
+  nextBtn.textContent = isLast ? 'Finish AB Test' : 'Next';
+  nextBtn.className = isLast ? 'btn btn-success' : 'btn btn-primary';
+  nextBtn.onclick = isLast ? tryFinishAB : () => navAB(1);
+}
+function answerAB(val) {
+  abAnswers[abItems[abIdx].id] = val; saveProgress(); renderAB();
+  setTimeout(() => { if (abIdx < abItems.length - 1) navAB(1); }, 300);
+}
+function navAB(dir) { abIdx = Math.max(0, Math.min(abItems.length - 1, abIdx + dir)); renderAB(); }
+
+// ============================================================
+// XAB TEST
+// ============================================================
+function renderXAB() {
+  const total = xabItems.length;
+  const answered = xabItems.filter(it => xabAnswers[it.id]).length;
+  document.getElementById('xab-progress').style.width = (answered / total * 100) + '%';
+  document.getElementById('xab-progress-text').textContent = `${answered} / ${total} answered`;
+  document.getElementById('xab-warning').innerHTML = '';
+
+  const item = xabItems[xabIdx];
+  const ans = xabAnswers[item.id] || '';
+
+  document.getElementById('xab-content').innerHTML = `
+    <div class="card">
+      <div class="card-header">
+        <span><strong>Item ${xabIdx + 1} / ${total}</strong></span>
+      </div>
+      <p style="font-size:0.9em; color:#666; margin-bottom:10px;">
+        Which sample (A or B) sounds more like <strong>the person in X</strong>?
+      </p>
+      <div class="audio-row">
+        <span class="audio-label" style="color:#7c3aed; font-weight:700;">X (Ref):</span>
+        <audio controls preload="auto" src="${item.refPath}" onerror="audioErr(this)"></audio>
+      </div>
+      <hr style="margin:8px 0; border:none; border-top:1px solid #eee;">
+      <div class="audio-row">
+        <span class="audio-label">Sample A:</span>
+        <audio controls preload="auto" src="${item.pathA}" onerror="audioErr(this)"></audio>
+      </div>
+      <div class="audio-row">
+        <span class="audio-label">Sample B:</span>
+        <audio controls preload="auto" src="${item.pathB}" onerror="audioErr(this)"></audio>
+      </div>
+      <div class="btn-group">
+        <button class="btn ${ans==='A'?'selected':''}" onclick="answerXAB('A')">A sounds more like X</button>
+        <button class="btn ${ans==='B'?'selected':''}" onclick="answerXAB('B')">B sounds more like X</button>
+      </div>
+    </div>`;
+
+  document.getElementById('xab-prev').disabled = xabIdx === 0;
+  const isLast = xabIdx === total - 1;
+  const nextBtn = document.getElementById('xab-next');
+  nextBtn.textContent = isLast ? 'Finish XAB Test' : 'Next';
+  nextBtn.className = isLast ? 'btn btn-success' : 'btn btn-primary';
+  nextBtn.onclick = isLast ? tryFinishXAB : () => navXAB(1);
+}
+function answerXAB(val) {
+  xabAnswers[xabItems[xabIdx].id] = val; saveProgress(); renderXAB();
+  setTimeout(() => { if (xabIdx < xabItems.length - 1) navXAB(1); }, 300);
+}
+function navXAB(dir) { xabIdx = Math.max(0, Math.min(xabItems.length - 1, xabIdx + dir)); renderXAB(); }
+
+// ============================================================
+// MOS TEST
+// ============================================================
+const MOS_LABELS = ['Very unnatural','Unnatural','Fair','Natural','Very natural'];
+
+function renderMOS() {
+  const total = mosItems.length;
+  const answered = mosItems.filter(it => mosAnswers[it.id]).length;
+  document.getElementById('mos-progress').style.width = (answered / total * 100) + '%';
+  document.getElementById('mos-progress-text').textContent = `${answered} / ${total} answered`;
+  document.getElementById('mos-warning').innerHTML = '';
+
+  const item = mosItems[mosIdx];
+  const ans = mosAnswers[item.id] || '';
+
+  document.getElementById('mos-content').innerHTML = `
+    <div class="card">
+      <div class="card-header">
+        <span><strong>Item ${mosIdx + 1} / ${total}</strong></span>
+      </div>
+      <p style="font-size:0.9em; color:#666; margin-bottom:10px;">
+        How <strong>natural</strong> does this audio sound?
+      </p>
+      <div class="audio-row">
+        <span class="audio-label">Audio:</span>
+        <audio controls preload="auto" src="${item.audioPath}" onerror="audioErr(this)"></audio>
+      </div>
+      <div class="mos-scale">
+        ${[1,2,3,4,5].map(s => `
+          <button class="mos-btn ${ans==s?'selected':''}" onclick="answerMOS(${s})">
+            <span class="score">${s}</span>
+            <span>${MOS_LABELS[s-1]}</span>
+          </button>`).join('')}
+      </div>
+    </div>`;
+
+  document.getElementById('mos-prev').disabled = mosIdx === 0;
+  const isLast = mosIdx === total - 1;
+  const nextBtn = document.getElementById('mos-next');
+  nextBtn.textContent = isLast ? 'Finish & Submit' : 'Next';
+  nextBtn.className = isLast ? 'btn btn-success' : 'btn btn-primary';
+  nextBtn.onclick = isLast ? tryFinishMOS : () => navMOS(1);
+}
+function answerMOS(val) {
+  mosAnswers[mosItems[mosIdx].id] = val; saveProgress(); renderMOS();
+  setTimeout(() => { if (mosIdx < mosItems.length - 1) navMOS(1); }, 300);
+}
+function navMOS(dir) { mosIdx = Math.max(0, Math.min(mosItems.length - 1, mosIdx + dir)); renderMOS(); }
+
+// ============================================================
+// Audio load-error handler (shows which file failed to load)
+// ============================================================
+function audioErr(el) {
+  const src = el.getAttribute('src') || '';
+  const span = document.createElement('span');
+  span.className = 'audio-error';
+  span.textContent = 'Audio failed to load: ' + src;
+  el.parentNode.replaceChild(span, el);
+}
+
+// ============================================================
+// SAVE / EXPORT
+// ============================================================
+function saveProgress() {
+  localStorage.setItem('fac_eval_v2_' + raterId, JSON.stringify({
+    raterId, abAnswers, xabAnswers, mosAnswers, timestamp: new Date().toISOString(),
+    submissionDone,
+  }));
+  updateTabChecks();
+}
+
+function decodeAB(item, answer) {
+  if (!answer || answer === 'none') return 'none';
+  return answer === 'A' ? item.labelA : item.labelB;
+}
+function decodeXAB(item, answer) {
+  if (!answer) return null;
+  return answer === 'A' ? item.labelA : item.labelB;
+}
+
+function buildFullResults() {
+  return {
+    raterId, version: 3, timestamp: new Date().toISOString(),
+    ab: abItems.map(item => ({
+      id:item.id, speaker:item.spk, utterance:item.utt, pairType:item.pairType, testSet:item.testSet,
+      sys1Key:item.sys1Key, sys2Key:item.sys2Key, labelA:item.labelA, labelB:item.labelB,
+      answer: abAnswers[item.id]||null, preferredSystem: decodeAB(item, abAnswers[item.id]),
+    })),
+    xab: xabItems.map(item => ({
+      id:item.id, speaker:item.spk, utterance:item.utt, pairType:item.pairType, testSet:item.testSet,
+      baselineKey:item.baselineKey, labelA:item.labelA, labelB:item.labelB,
+      answer: xabAnswers[item.id]||null, chosenSystem: decodeXAB(item, xabAnswers[item.id]),
+    })),
+    mos: mosItems.map(item => ({
+      id:item.id, speaker:item.spk, utterance:item.utt, testSet:item.testSet,
+      condition:item.condition, condLabel:item.condLabel,
+      score: mosAnswers[item.id]||null,
+    })),
+  };
+}
+
+// Light obfuscation (XOR + Base64) so raters can't easily read the file contents.
+// This is NOT cryptographic security - it just discourages casual inspection.
+function obfuscate(text, key='fac2026-key') {
+  const enc = new TextEncoder().encode(text);
+  const kBytes = new TextEncoder().encode(key);
+  const out = new Uint8Array(enc.length);
+  for (let i = 0; i < enc.length; i++) out[i] = enc[i] ^ kBytes[i % kBytes.length];
+  let binary = ''; for (let i = 0; i < out.length; i++) binary += String.fromCharCode(out[i]);
+  return btoa(binary);
+}
+function deobfuscate(b64, key='fac2026-key') {
+  try {
+    const binary = atob(b64);
+    const arr = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) arr[i] = binary.charCodeAt(i);
+    const kBytes = new TextEncoder().encode(key);
+    const out = new Uint8Array(arr.length);
+    for (let i = 0; i < arr.length; i++) out[i] = arr[i] ^ kBytes[i % kBytes.length];
+    return new TextDecoder().decode(out);
+  } catch(e) { return null; }
+}
+
+function autoDownloadSubmission() {
+  // Rater's CSV contains ONLY raw choices (no system identity). The admin
+  // re-derives which system was 'A' vs 'B' using the rater_id seed, which
+  // deterministically reproduces the shuffle + swap done when the rater took the test.
+  const stamp = new Date().toISOString();
+  const lines = [];
+  lines.push('# FAC Eval Submission');
+  lines.push('# rater_id: ' + raterId);
+  lines.push('# timestamp: ' + stamp);
+  lines.push('# format_version: 1');
+  lines.push('test,item_idx,item_id,answer,mos_score');
+  abItems.forEach((it, i) => {
+    const a = abAnswers[it.id] || '';
+    lines.push(['AB', i + 1, it.id, a, ''].map(csvEscape).join(','));
+  });
+  xabItems.forEach((it, i) => {
+    const a = xabAnswers[it.id] || '';
+    lines.push(['XAB', i + 1, it.id, a, ''].map(csvEscape).join(','));
+  });
+  mosItems.forEach((it, i) => {
+    const s = mosAnswers[it.id] || '';
+    lines.push(['MOS', i + 1, it.id, '', s].map(csvEscape).join(','));
+  });
+  const csv = lines.join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const safeName = raterId.replace(/[^a-zA-Z0-9_-]/g, '_');
+  const dayStamp = stamp.slice(0, 10);
+  a.href = url; a.download = `fac_eval_${safeName}_${dayStamp}.csv`;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 500);
+}
+
+// ============================================================
+// RATER'S OWN SUMMARY (non-leaking view)
+// ============================================================
+function renderOwnSummary() {
+  const el = document.getElementById('rater-own-summary');
+  let h = '<h3 style="margin-bottom:8px;">Your responses</h3>';
+
+  h += '<div class="card" style="padding:12px;"><strong>Test 1: AB Preference (' + abItems.length + ' items)</strong>';
+  h += '<table class="summary-tbl"><tr><th>Item</th><th>Your choice</th></tr>';
+  abItems.forEach((it, i) => {
+    const a = abAnswers[it.id] || '-';
+    const label = a === 'A' ? 'A is more native-like' : a === 'B' ? 'B is more native-like' : a === 'none' ? 'No preference' : '-';
+    h += `<tr><td>#${i+1}</td><td>${label}</td></tr>`;
+  });
+  h += '</table></div>';
+
+  h += '<div class="card" style="padding:12px;"><strong>Test 2: XAB Similarity (' + xabItems.length + ' items)</strong>';
+  h += '<table class="summary-tbl"><tr><th>Item</th><th>Your choice</th></tr>';
+  xabItems.forEach((it, i) => {
+    const a = xabAnswers[it.id] || '-';
+    const label = a === 'A' ? 'A sounds more like X' : a === 'B' ? 'B sounds more like X' : '-';
+    h += `<tr><td>#${i+1}</td><td>${label}</td></tr>`;
+  });
+  h += '</table></div>';
+
+  h += '<div class="card" style="padding:12px;"><strong>Test 3: MOS Naturalness (' + mosItems.length + ' items)</strong>';
+  h += '<table class="summary-tbl"><tr><th>Item</th><th>Your rating</th></tr>';
+  mosItems.forEach((it, i) => {
+    const s = mosAnswers[it.id];
+    h += `<tr><td>#${i+1}</td><td>${s ? s + ' - ' + MOS_LABELS[s-1] : '-'}</td></tr>`;
+  });
+  h += '</table></div>';
+
+  el.innerHTML = h;
+}
+
+// ============================================================
+// ADMIN ACCESS
+// ============================================================
+function promptAdmin() {
+  const pw = prompt('Enter admin password:');
+  if (pw === null) return;
+  if (pw !== ADMIN_PASSWORD) { alert('Incorrect password.'); return; }
+  showResultsDashboard();
+}
+
+function showResultsDashboard() {
+  document.getElementById('login-page').classList.add('hidden');
+  document.getElementById('eval-page').classList.add('hidden');
+  document.getElementById('results-page').classList.remove('hidden');
+  allResults = {};
+  renderDashboard();
+}
+
+document.getElementById('upload-area').addEventListener('click', () => document.getElementById('file-input').click());
+
+function importResults(event) {
+  const files = event.target.files;
+  for (const file of files) {
+    const reader = new FileReader();
+    const fname = file.name;
+    reader.onload = function(e) {
+      try {
+        const raw = e.target.result;
+        const isCSV = fname.toLowerCase().endsWith('.csv') || raw.trimStart().startsWith('# FAC Eval Submission');
+        let d;
+        if (isCSV) {
+          d = parseRaterCSV(raw);
+        } else {
+          try {
+            const parsed = JSON.parse(raw);
+            if (parsed && parsed._format === 'FAC-EVAL-SUBMISSION' && parsed.data) {
+              const jsonText = deobfuscate(parsed.data);
+              if (!jsonText) throw new Error('Cannot decode');
+              d = JSON.parse(jsonText);
+            } else {
+              d = parsed; // legacy plain JSON
+            }
+          } catch(err) { console.error('Parse error:', fname, err); return; }
+        }
+        if (d && d.raterId) { allResults[d.raterId] = d; renderDashboard(); }
+      } catch(err) { console.error('Import error:', fname, err); }
+    };
+    reader.readAsText(file);
+  }
+}
+
+// Parse a rater CSV and reconstruct the full per-rater data structure,
+// re-deriving which system was A vs B from the rater_id seed.
+function parseRaterCSV(text) {
+  const lines = text.split(/\r?\n/);
+  let raterId = null, timestamp = null;
+  const dataRows = [];
+  let headerSeen = false;
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    if (line.startsWith('#')) {
+      const m = line.match(/^#\s*(\w+):\s*(.+)$/);
+      if (m) {
+        if (m[1] === 'rater_id') raterId = m[2].trim();
+        else if (m[1] === 'timestamp') timestamp = m[2].trim();
+      }
+      continue;
+    }
+    if (!headerSeen) { headerSeen = true; continue; } // skip CSV header row
+    const cols = parseCSVLine(line);
+    if (cols.length < 5) continue;
+    dataRows.push({ test: cols[0], item_idx: +cols[1], item_id: cols[2], answer: cols[3], mos_score: cols[4] });
+  }
+  if (!raterId) throw new Error('Missing rater_id header in CSV');
+
+  // Reproduce the exact shuffle/swap that the rater's browser did
+  const localRng = mulberry32(hashStr(raterId));
+  const abLocal = shuffle(AB_RAW, localRng).map(item => {
+    const swap = localRng() > 0.5;
+    return { ...item, swap,
+      pathA: swap ? item.pathSys2 : item.pathSys1, pathB: swap ? item.pathSys1 : item.pathSys2,
+      labelA: swap ? item.sys2Key : item.sys1Key, labelB: swap ? item.sys1Key : item.sys2Key };
+  });
+  const xabLocal = shuffle(XAB_RAW, localRng).map(item => {
+    const swap = localRng() > 0.5;
+    return { ...item, swap,
+      pathA: swap ? item.pathBaseline : item.pathQP, pathB: swap ? item.pathQP : item.pathBaseline,
+      labelA: swap ? item.baselineKey : 'qp', labelB: swap ? 'qp' : item.baselineKey };
+  });
+  const mosLocal = shuffle(MOS_RAW, localRng);
+
+  const abAns = {}, xabAns = {}, mosAns = {};
+  for (const r of dataRows) {
+    if (r.test === 'AB') abAns[r.item_id] = r.answer || null;
+    else if (r.test === 'XAB') xabAns[r.item_id] = r.answer || null;
+    else if (r.test === 'MOS') mosAns[r.item_id] = r.mos_score ? +r.mos_score : null;
+  }
+
+  return {
+    raterId, timestamp: timestamp || new Date().toISOString(), version: 4,
+    ab: abLocal.map(item => ({
+      id: item.id, speaker: item.spk, utterance: item.utt, pairType: item.pairType, testSet: item.testSet,
+      sys1Key: item.sys1Key, sys2Key: item.sys2Key, labelA: item.labelA, labelB: item.labelB,
+      answer: abAns[item.id] || null,
+      preferredSystem: decodeAB(item, abAns[item.id]),
+    })),
+    xab: xabLocal.map(item => ({
+      id: item.id, speaker: item.spk, utterance: item.utt, pairType: item.pairType, testSet: item.testSet,
+      baselineKey: item.baselineKey, labelA: item.labelA, labelB: item.labelB,
+      answer: xabAns[item.id] || null,
+      chosenSystem: decodeXAB(item, xabAns[item.id]),
+    })),
+    mos: mosLocal.map(item => ({
+      id: item.id, speaker: item.spk, utterance: item.utt, testSet: item.testSet,
+      condition: item.condition, condLabel: item.condLabel,
+      score: mosAns[item.id] || null,
+    })),
+  };
+}
+
+function parseCSVLine(line) {
+  const out = []; let cur = ''; let inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (inQ) {
+      if (c === '"' && line[i+1] === '"') { cur += '"'; i++; }
+      else if (c === '"') { inQ = false; }
+      else cur += c;
+    } else {
+      if (c === '"') inQ = true;
+      else if (c === ',') { out.push(cur); cur = ''; }
+      else cur += c;
+    }
+  }
+  out.push(cur);
+  return out;
+}
+
+function backToLogin() {
+  document.getElementById('results-page').classList.add('hidden');
+  document.getElementById('eval-page').classList.add('hidden');
+  document.getElementById('login-page').classList.remove('hidden');
+  document.getElementById('rater-id').value = '';
+}
+
+// ============================================================
+// RELIABILITY FILTER
+// ============================================================
+// Thresholds
+const REL = {
+  ab_straightline: 0.80,  // >80% same answer in AB → flag
+  xab_straightline: 0.85, // >85% same answer in XAB → flag
+  mos_min_std: 0.50,      // MOS std < 0.5 → flag (no variance)
+  l1_vs_l2_min_gap: 0.0,  // L1 mean must exceed L2 mean by at least this
+  l1_min_mean: 3.0,       // L1 (native) mean MOS should be >= this
+};
+
+function computeReliability(r) {
+  const flags = [];
+
+  // AB straight-line check (A/B/none)
+  const abAns = (r.ab || []).map(x => x.answer).filter(Boolean);
+  if (abAns.length > 0) {
+    const counts = {A:0,B:0,none:0};
+    abAns.forEach(a => { if (counts[a] !== undefined) counts[a]++; });
+    const maxFrac = Math.max(...Object.values(counts)) / abAns.length;
+    if (maxFrac > REL.ab_straightline) flags.push(`AB straight-line (${(maxFrac*100).toFixed(0)}% same choice)`);
+  }
+
+  // XAB straight-line check
+  const xabAns = (r.xab || []).map(x => x.answer).filter(Boolean);
+  if (xabAns.length > 0) {
+    const counts = {A:0,B:0};
+    xabAns.forEach(a => { if (counts[a] !== undefined) counts[a]++; });
+    const maxFrac = Math.max(counts.A, counts.B) / xabAns.length;
+    if (maxFrac > REL.xab_straightline) flags.push(`XAB straight-line (${(maxFrac*100).toFixed(0)}% same choice)`);
+  }
+
+  // MOS variance
+  const mosScores = (r.mos || []).map(x => x.score).filter(s => s != null).map(Number);
+  if (mosScores.length >= 4) {
+    const mean = mosScores.reduce((a,b)=>a+b,0)/mosScores.length;
+    const std = Math.sqrt(mosScores.reduce((a,b)=>a+(b-mean)**2,0)/mosScores.length);
+    if (std < REL.mos_min_std) flags.push(`MOS no variance (std=${std.toFixed(2)})`);
+  }
+
+  // L1 sanity check: L1 (native) should be rated higher than L2 (original accented)
+  const byCond = {l1:[], l2:[]};
+  (r.mos || []).forEach(x => {
+    if (x.score && byCond[x.condition]) byCond[x.condition].push(Number(x.score));
+  });
+  const mean = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null;
+  const l1m = mean(byCond.l1), l2m = mean(byCond.l2);
+  if (l1m != null && l2m != null) {
+    if (l1m <= l2m + REL.l1_vs_l2_min_gap) flags.push(`L1 not rated higher than L2 (L1=${l1m.toFixed(2)}, L2=${l2m.toFixed(2)})`);
+    if (l1m < REL.l1_min_mean) flags.push(`L1 mean too low (${l1m.toFixed(2)})`);
+  }
+
+  return { flags, passed: flags.length === 0 };
+}
+
+let excludeFlagged = true; // admin toggle
+
+function toggleExclude() { excludeFlagged = !excludeFlagged; renderDashboard(); }
+
+function getIncludedRaterIds() {
+  const all = Object.keys(allResults);
+  if (!excludeFlagged) return all;
+  return all.filter(rid => computeReliability(allResults[rid]).passed);
+}
+
+function renderDashboard() {
+  const rids = Object.keys(allResults);
+  document.getElementById('imported-raters').textContent =
+    rids.length > 0 ? `Loaded ${rids.length} rater(s): ${rids.join(', ')}` : 'No results loaded.';
+  if (rids.length === 0) { document.getElementById('results-content').innerHTML = ''; return; }
+
+  const includedRids = getIncludedRaterIds();
+  const excludedRids = rids.filter(r => !includedRids.includes(r));
+
+  let html = '';
+
+  // Overview
+  let abA=0,abT=0,xA=0,xT=0,mA=0,mT=0;
+  includedRids.forEach(rid => { const r=allResults[rid];
+    if(r.ab){abT+=r.ab.length; abA+=r.ab.filter(x=>x.answer).length;}
+    if(r.xab){xT+=r.xab.length; xA+=r.xab.filter(x=>x.answer).length;}
+    if(r.mos){mT+=r.mos.length; mA+=r.mos.filter(x=>x.score).length;}
+  });
+  html += `<div class="card"><h2>Overview (aggregates below use ${includedRids.length} included rater(s))</h2><div class="stat-grid">
+    <div class="stat-card"><div class="value">${rids.length}</div><div class="label">Total Raters</div></div>
+    <div class="stat-card"><div class="value">${includedRids.length}</div><div class="label">Included</div></div>
+    <div class="stat-card"><div class="value">${excludedRids.length}</div><div class="label">Flagged/Excluded</div></div>
+    <div class="stat-card"><div class="value">${abA}/${abT}</div><div class="label">AB Answers</div></div>
+    <div class="stat-card"><div class="value">${xA}/${xT}</div><div class="label">XAB Answers</div></div>
+    <div class="stat-card"><div class="value">${mA}/${mT}</div><div class="label">MOS Ratings</div></div>
+  </div>
+  <div style="margin-top:10px;">
+    <label style="font-size:0.9em;">
+      <input type="checkbox" ${excludeFlagged?'checked':''} onchange="toggleExclude()">
+      Exclude flagged (unreliable) raters from aggregates & exports
+    </label>
+  </div>
+  </div>`;
+
+  html += `<div class="card"><h2>Rater Reliability</h2>${dashReliability(rids)}</div>`;
+  html += `<div class="card"><h2>AB Accentedness Preference</h2>${dashAB(includedRids)}</div>`;
+  html += `<div class="card"><h2>XAB Speaker Similarity</h2>${dashXAB(includedRids)}</div>`;
+  html += `<div class="card"><h2>MOS Naturalness</h2>${dashMOS(includedRids)}</div>`;
+  html += `<div class="card"><h2>Per-Rater Completion</h2>${dashRaters(rids)}</div>`;
+
+  html += `<div class="card" style="text-align:center">
+    <button class="btn btn-primary" onclick="exportSummaryCSV()">Export Aggregate Summary CSV</button>
+    <button class="btn btn-primary" style="margin-left:8px" onclick="exportCSV()">Export Raw Item-Level CSV</button>
+    <button class="btn" style="margin-left:8px" onclick="exportJSON()">Export JSON</button>
+    <p style="font-size:0.8em;color:#888;margin-top:8px">Aggregate CSV = computed win rates & MOS means.
+    Raw CSV = every answer from every included rater.
+    Only complete, non-flagged raters are included when the toggle above is on.</p>
+  </div>`;
+
+  document.getElementById('results-content').innerHTML = html;
+}
+
+function dashReliability(rids) {
+  let h = '<table><tr><th>Rater</th><th>Status</th><th>Flags</th></tr>';
+  rids.forEach(rid => {
+    const rel = computeReliability(allResults[rid]);
+    const color = rel.passed ? '#16a34a' : '#c00';
+    const label = rel.passed ? 'OK' : 'FLAGGED';
+    const flagStr = rel.flags.length ? rel.flags.join('; ') : '—';
+    h += `<tr><td>${rid}</td><td style="color:${color};font-weight:600">${label}</td><td style="font-size:0.85em">${flagStr}</td></tr>`;
+  });
+  return h + '</table>';
+}
+
+function dashAB(rids) {
+  const pairs = ['QP vs TokAN','QP vs TTS-Guided','QP vs ZS-NoRef'];
+  let h = '<table><tr><th>Comparison</th><th>QP Pref</th><th>Baseline Pref</th><th>No Pref</th><th>N</th><th>QP %</th></tr>';
+  pairs.forEach(pt => {
+    let qp=0,bl=0,np=0,n=0;
+    rids.forEach(rid => (allResults[rid].ab||[]).forEach(it => {
+      if (it.pairType!==pt||!it.answer) return; n++;
+      if (it.preferredSystem==='qp') qp++; else if (it.preferredSystem==='none') np++; else bl++;
+    }));
+    h += `<tr><td>${pt}</td><td>${qp}</td><td>${bl}</td><td>${np}</td><td>${n}</td><td><strong>${n?((qp/n*100).toFixed(1)):'-'}%</strong></td></tr>`;
+  });
+  return h + '</table>';
+}
+
+function dashXAB(rids) {
+  const pairs = ['QP vs TokAN','QP vs TTS-Guided','QP vs ZS-NoRef'];
+  let h = '<table><tr><th>Comparison</th><th>QP Chosen</th><th>Baseline</th><th>N</th><th>QP %</th></tr>';
+  pairs.forEach(pt => {
+    let qp=0,bl=0,n=0;
+    rids.forEach(rid => (allResults[rid].xab||[]).forEach(it => {
+      if (it.pairType!==pt||!it.answer) return; n++;
+      if (it.chosenSystem==='qp') qp++; else bl++;
+    }));
+    h += `<tr><td>${pt}</td><td>${qp}</td><td>${bl}</td><td>${n}</td><td><strong>${n?((qp/n*100).toFixed(1)):'-'}%</strong></td></tr>`;
+  });
+  return h + '</table>';
+}
+
+function dashMOS(rids) {
+  const groups = {};
+  rids.forEach(rid => (allResults[rid].mos||[]).forEach(it => {
+    if (!it.score) return;
+    const k = `${it.testSet}__${it.condition}`;
+    if (!groups[k]) groups[k] = {testSet:it.testSet, condition:it.condition, condLabel:it.condLabel, scores:[]};
+    groups[k].scores.push(+it.score);
+  }));
+  const CN = {l1:'L1 Native (GT)',l2:'L2 Original',qp:'P1 (QP)',tokan:'TokAN',ttsguided:'TTS-Guided',zsnoref:'ZS-NoRef'};
+  const sets = [{k:'tokan',l:'TokAN Test Set'},{k:'ttsguided',l:'TTS-Guided Test Set'},{k:'zsnoref',l:'ZS-NoRef Test Set'}];
+  let h = '';
+  sets.forEach(ts => {
+    h += `<h3 style="margin:12px 0 6px;font-size:0.95em">${ts.l}</h3>`;
+    h += '<table><tr><th>Condition</th><th>Mean</th><th>Std</th><th>N</th><th>95% CI</th></tr>';
+    ['l1','l2','qp',ts.k].forEach(c => {
+      const g = groups[`${ts.k}__${c}`];
+      if (!g||!g.scores.length) { h += `<tr><td>${CN[c]||c}</td><td>-</td><td>-</td><td>0</td><td>-</td></tr>`; return; }
+      const s=g.scores, m=s.reduce((a,b)=>a+b,0)/s.length;
+      const sd=Math.sqrt(s.reduce((a,b)=>a+(b-m)**2,0)/s.length);
+      h += `<tr><td>${CN[c]}</td><td><strong>${m.toFixed(2)}</strong></td><td>${sd.toFixed(2)}</td><td>${s.length}</td><td>&plusmn;${(1.96*sd/Math.sqrt(s.length)).toFixed(2)}</td></tr>`;
+    });
+    h += '</table>';
+  });
+  return h;
+}
+
+function dashRaters(rids) {
+  let h = '<table><tr><th>Rater</th><th>AB</th><th>XAB</th><th>MOS</th><th>Complete?</th><th>Last Active</th></tr>';
+  rids.forEach(rid => {
+    const r=allResults[rid];
+    const abC = r.ab?r.ab.filter(x=>x.answer).length:0, abN = r.ab?r.ab.length:0;
+    const xabC = r.xab?r.xab.filter(x=>x.answer).length:0, xabN = r.xab?r.xab.length:0;
+    const mosC = r.mos?r.mos.filter(x=>x.score).length:0, mosN = r.mos?r.mos.length:0;
+    const complete = (abC===abN && abN>0) && (xabC===xabN && xabN>0) && (mosC===mosN && mosN>0);
+    h += `<tr><td>${rid}</td><td>${abC}/${abN}</td><td>${xabC}/${xabN}</td><td>${mosC}/${mosN}</td>
+      <td style="color:${complete?'#16a34a':'#c00'};font-weight:600">${complete?'Yes':'No'}</td>
+      <td>${r.timestamp?new Date(r.timestamp).toLocaleString():'-'}</td></tr>`;
+  });
+  return h + '</table>';
+}
+
+// ============================================================
+// CSV / JSON EXPORT (admin only - only complete raters)
+// ============================================================
+function csvEscape(v) {
+  if (v === null || v === undefined) return '';
+  const s = String(v);
+  if (/[",\n]/.test(s)) return '"' + s.replace(/"/g,'""') + '"';
+  return s;
+}
+
+function getCompleteRaterIds() {
+  return Object.keys(allResults).filter(rid => {
+    const r = allResults[rid];
+    if (!r.ab || !r.xab || !r.mos) return false;
+    return r.ab.every(x => x.answer) && r.xab.every(x => x.answer) && r.mos.every(x => x.score);
+  });
+}
+
+// Raters to use for export: complete AND (if toggle on) not flagged
+function getExportRaterIds() {
+  const complete = getCompleteRaterIds();
+  if (!excludeFlagged) return complete;
+  return complete.filter(rid => computeReliability(allResults[rid]).passed);
+}
+
+function exportCSV() {
+  const rids = getExportRaterIds();
+  const all = Object.keys(allResults);
+  const skipped = all.filter(r => !rids.includes(r));
+  if (rids.length === 0) {
+    alert('No rater submissions available to export. (Must be complete and, if the filter toggle is on, non-flagged.)');
+    return;
+  }
+  const header = ['test','rater','item_id','speaker','utterance','test_set','pair_type',
+                  'label_A','label_B','answer','preferred_or_chosen_system',
+                  'condition','cond_label','mos_score'].join(',');
+  const rows = [header];
+  rids.forEach(rid => {
+    (allResults[rid].ab||[]).forEach(it => {
+      rows.push(['AB',rid,it.id,it.speaker,it.utterance,it.testSet,it.pairType,
+                 it.labelA,it.labelB,it.answer||'',it.preferredSystem||'','','',''].map(csvEscape).join(','));
+    });
+    (allResults[rid].xab||[]).forEach(it => {
+      rows.push(['XAB',rid,it.id,it.speaker,it.utterance,it.testSet,it.pairType,
+                 it.labelA,it.labelB,it.answer||'',it.chosenSystem||'','','',''].map(csvEscape).join(','));
+    });
+    (allResults[rid].mos||[]).forEach(it => {
+      rows.push(['MOS',rid,it.id,it.speaker,it.utterance,it.testSet,'',
+                 '','','','',it.condition,it.condLabel,it.score||''].map(csvEscape).join(','));
+    });
+  });
+  const csv = rows.join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = `fac_eval_raw_results_${stamp}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  let msg = `Exported ${rids.length} rater(s).`;
+  if (skipped.length > 0) msg += `\nSkipped ${skipped.length}: ${skipped.join(', ')}`;
+  alert(msg);
+}
+
+// Aggregate summary CSV: computed stats across included raters.
+// Sections: Meta, Reliability, AB win rates, XAB win rates, MOS means.
+function exportSummaryCSV() {
+  const all = Object.keys(allResults);
+  if (all.length === 0) { alert('No rater data loaded.'); return; }
+  const included = getExportRaterIds();
+  const excluded = all.filter(r => !included.includes(r));
+  const stamp = new Date().toISOString();
+
+  const rows = [];
+  const push = r => rows.push(r.map(csvEscape).join(','));
+
+  // --- META ---
+  push(['# FAC Subjective Evaluation — Aggregate Summary']);
+  push(['# Generated', stamp]);
+  push(['# Raters loaded', all.length]);
+  push(['# Raters included in aggregates', included.length]);
+  push(['# Raters excluded', excluded.length]);
+  push(['# Exclude-flagged toggle', excludeFlagged ? 'ON (flagged raters excluded)' : 'OFF (all complete raters included)']);
+  push(['# Included rater IDs', included.join('; ')]);
+  push(['# Excluded rater IDs', excluded.join('; ')]);
+  push([]);
+
+  // --- RELIABILITY FLAGS ---
+  push(['## Rater Reliability']);
+  push(['rater_id','status','flags']);
+  all.forEach(rid => {
+    const rel = computeReliability(allResults[rid]);
+    push([rid, rel.passed ? 'OK' : 'FLAGGED', rel.flags.join('; ') || '']);
+  });
+  push([]);
+
+  // --- AB ACCENTEDNESS PREFERENCE ---
+  push(['## AB Accentedness Preference (win rate for QP vs each baseline)']);
+  push(['comparison','qp_preferred','baseline_preferred','no_preference','total_N','qp_win_rate_%','baseline_win_rate_%','no_pref_rate_%']);
+  ['QP vs TokAN','QP vs TTS-Guided','QP vs ZS-NoRef'].forEach(pt => {
+    let qp=0,bl=0,np=0,n=0;
+    included.forEach(rid => (allResults[rid].ab||[]).forEach(it => {
+      if (it.pairType!==pt||!it.answer) return; n++;
+      if (it.preferredSystem==='qp') qp++; else if (it.preferredSystem==='none') np++; else bl++;
+    }));
+    push([pt, qp, bl, np, n,
+      n?(qp/n*100).toFixed(1):'-',
+      n?(bl/n*100).toFixed(1):'-',
+      n?(np/n*100).toFixed(1):'-']);
+  });
+  push([]);
+
+  // --- XAB SPEAKER SIMILARITY ---
+  push(['## XAB Speaker Similarity (chose more similar to reference X)']);
+  push(['comparison','qp_chosen','baseline_chosen','total_N','qp_win_rate_%','baseline_win_rate_%']);
+  ['QP vs TokAN','QP vs TTS-Guided','QP vs ZS-NoRef'].forEach(pt => {
+    let qp=0,bl=0,n=0;
+    included.forEach(rid => (allResults[rid].xab||[]).forEach(it => {
+      if (it.pairType!==pt||!it.answer) return; n++;
+      if (it.chosenSystem==='qp') qp++; else bl++;
+    }));
+    push([pt, qp, bl, n,
+      n?(qp/n*100).toFixed(1):'-',
+      n?(bl/n*100).toFixed(1):'-']);
+  });
+  push([]);
+
+  // --- MOS NATURALNESS ---
+  push(['## MOS Naturalness (mean opinion score per test set × condition)']);
+  push(['test_set','condition','condition_label','mean','std','N','95%_CI_half_width']);
+  const CN = {l1:'L1 Native (GT)',l2:'L2 Original',qp:'P1 (QP)',tokan:'TokAN',ttsguided:'TTS-Guided',zsnoref:'ZS-NoRef'};
+  const sets = [{k:'tokan',l:'TokAN'},{k:'ttsguided',l:'TTS-Guided'},{k:'zsnoref',l:'ZS-NoRef'}];
+  sets.forEach(ts => {
+    ['l1','l2','qp',ts.k].forEach(c => {
+      const scores = [];
+      included.forEach(rid => (allResults[rid].mos||[]).forEach(it => {
+        if (it.testSet === ts.k && it.condition === c && it.score != null) scores.push(+it.score);
+      }));
+      if (scores.length === 0) { push([ts.l, c, CN[c]||c, '-', '-', 0, '-']); return; }
+      const m = scores.reduce((a,b)=>a+b,0)/scores.length;
+      const sd = Math.sqrt(scores.reduce((a,b)=>a+(b-m)**2,0)/scores.length);
+      const ci = 1.96*sd/Math.sqrt(scores.length);
+      push([ts.l, c, CN[c]||c, m.toFixed(3), sd.toFixed(3), scores.length, ci.toFixed(3)]);
+    });
+  });
+  push([]);
+
+  // --- MOS by condition (collapsed across test sets) ---
+  push(['## MOS Naturalness — collapsed across test sets (per condition)']);
+  push(['condition','condition_label','mean','std','N','95%_CI_half_width']);
+  const byCond = {};
+  included.forEach(rid => (allResults[rid].mos||[]).forEach(it => {
+    if (it.score == null) return;
+    const key = it.condition;
+    (byCond[key] = byCond[key] || []).push(+it.score);
+  }));
+  ['l1','l2','qp','tokan','ttsguided','zsnoref'].forEach(c => {
+    const scores = byCond[c] || [];
+    if (scores.length === 0) { push([c, CN[c]||c, '-', '-', 0, '-']); return; }
+    const m = scores.reduce((a,b)=>a+b,0)/scores.length;
+    const sd = Math.sqrt(scores.reduce((a,b)=>a+(b-m)**2,0)/scores.length);
+    const ci = 1.96*sd/Math.sqrt(scores.length);
+    push([c, CN[c]||c, m.toFixed(3), sd.toFixed(3), scores.length, ci.toFixed(3)]);
+  });
+
+  const csv = rows.join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const day = stamp.slice(0,10);
+  a.href = url; a.download = `fac_eval_summary_${day}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  alert(`Exported aggregate summary (${included.length} included, ${excluded.length} excluded).`);
+}
+
+function exportJSON() {
+  const rids = getCompleteRaterIds();
+  if (rids.length === 0) {
+    alert('No fully-completed rater submissions available to export.');
+    return;
+  }
+  const out = {};
+  rids.forEach(rid => { out[rid] = allResults[rid]; });
+  const blob = new Blob([JSON.stringify({exportedAt:new Date().toISOString(), raters:out}, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = `fac_eval_all_results_${stamp}.json`;
+  a.click(); URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
