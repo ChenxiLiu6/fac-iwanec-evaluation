@@ -580,7 +580,10 @@ function updateDoneMessage(serverOk) {
 }
 
 function postResultsToServer() {
-  if (!GOOGLE_APPS_SCRIPT_URL) return Promise.resolve(false);
+  if (!GOOGLE_APPS_SCRIPT_URL) {
+    console.log('[FAC] No GOOGLE_APPS_SCRIPT_URL configured; skipping server upload.');
+    return Promise.resolve(false);
+  }
   const payload = {
     rater_id: raterId,
     timestamp: new Date().toISOString(),
@@ -590,13 +593,22 @@ function postResultsToServer() {
     xab: xabItems.map((it, i) => ({ idx: i + 1, id: it.id, answer: xabAnswers[it.id] || '' })),
     mos: mosItems.map((it, i) => ({ idx: i + 1, id: it.id, score: mosAnswers[it.id] || '' })),
   };
-  // Use text/plain to avoid CORS preflight; Apps Script reads e.postData.contents
+  console.log('[FAC] POSTing results to Apps Script:', GOOGLE_APPS_SCRIPT_URL);
+  // mode:'no-cors' is the reliable pattern for Google Apps Script Web Apps.
+  // The response is opaque to JS, but the server will still receive and process the POST.
+  // Content-Type text/plain keeps it a "simple" request (no CORS preflight).
   return fetch(GOOGLE_APPS_SCRIPT_URL, {
     method: 'POST',
-    mode: 'cors',
+    mode: 'no-cors',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(payload),
-  }).then(r => r && r.ok).catch(() => false);
+  }).then(() => {
+    console.log('[FAC] POST completed (opaque response - check your Google Sheet to verify).');
+    return true;
+  }).catch(err => {
+    console.error('[FAC] POST failed:', err);
+    return false;
+  });
 }
 
 // ============================================================
@@ -1048,8 +1060,9 @@ const REL = {
   ab_straightline: 0.80,  // >80% same answer in AB → flag
   xab_straightline: 0.85, // >85% same answer in XAB → flag
   mos_min_std: 0.50,      // MOS std < 0.5 → flag (no variance)
-  l1_vs_l2_min_gap: 0.0,  // L1 mean must exceed L2 mean by at least this
   l1_min_mean: 3.0,       // L1 (native) mean MOS should be >= this
+  // L1-vs-L2 gap check removed: both are original speech, so L2 being rated
+  // equal to or higher than L1 is legitimate and not a reliability problem.
 };
 
 function computeReliability(r) {
@@ -1081,16 +1094,17 @@ function computeReliability(r) {
     if (std < REL.mos_min_std) flags.push(`MOS no variance (std=${std.toFixed(2)})`);
   }
 
-  // L1 sanity check: L1 (native) should be rated higher than L2 (original accented)
-  const byCond = {l1:[], l2:[]};
+  // L1 sanity check: L1 (native) clips should be rated at least reasonably natural.
+  // We do NOT require L1 > L2 because both are original speech and L2 can legitimately
+  // sound equally natural (or more so) for many raters.
+  const byCond = {l1:[]};
   (r.mos || []).forEach(x => {
     if (x.score && byCond[x.condition]) byCond[x.condition].push(Number(x.score));
   });
   const mean = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null;
-  const l1m = mean(byCond.l1), l2m = mean(byCond.l2);
-  if (l1m != null && l2m != null) {
-    if (l1m <= l2m + REL.l1_vs_l2_min_gap) flags.push(`L1 not rated higher than L2 (L1=${l1m.toFixed(2)}, L2=${l2m.toFixed(2)})`);
-    if (l1m < REL.l1_min_mean) flags.push(`L1 mean too low (${l1m.toFixed(2)})`);
+  const l1m = mean(byCond.l1);
+  if (l1m != null && l1m < REL.l1_min_mean) {
+    flags.push(`L1 mean too low (${l1m.toFixed(2)})`);
   }
 
   return { flags, passed: flags.length === 0 };
